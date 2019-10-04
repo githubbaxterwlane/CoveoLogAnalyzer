@@ -11,13 +11,13 @@ namespace CoveoConsumptionDashboardSummarizer
 {
     public class Summarizer
     {
-        private FileInfo _queriesFileInfo;
+        private FileInfo[] _queriesFileInfoArray;
         private List<QueryLogItem> _logItems;
 
         public void Run()
         {
 
-            _queriesFileInfo= GetQueriesFile();
+            _queriesFileInfoArray= GetQueriesFiles();
 
             _logItems = GetLogItems();
 
@@ -28,7 +28,10 @@ namespace CoveoConsumptionDashboardSummarizer
 
         private void Summarize()
         {
-            
+
+            Console.WriteLine($"Trimming the log entries to only include queries from this month: {DateTime.Now:MMMM}");
+            _logItems = _logItems.Where(i => i.DateTime.Month == DateTime.Now.Month).ToList();
+
             Console.WriteLine();
             Console.WriteLine(new string('-', 27));
 
@@ -128,31 +131,35 @@ namespace CoveoConsumptionDashboardSummarizer
 
         private List<QueryLogItem> GetLogItems()
         {
-            List<QueryLogItem> logItems;
+            List<QueryLogItem> logItems = new List<QueryLogItem>();
 
-            using (var reader = new StreamReader(_queriesFileInfo.FullName))
-            using (var csv = new CsvReader(reader))
+            foreach (var curCSVFileInfo in _queriesFileInfoArray)
             {
-                logItems = csv.GetRecords<QueryLogItem>().ToList();
+                using (var reader = new StreamReader(curCSVFileInfo.FullName))
+                using (var csv = new CsvReader(reader))
+                {
+                    logItems.AddRange(csv.GetRecords<QueryLogItem>().ToList());
+                }
             }
 
             return logItems;
         }
         
-        private FileInfo GetQueriesFile()
+        private FileInfo[] GetQueriesFiles()
         {
-
-            //const string fileName = "Queries_mohawkindustriesproductionwwrtu1cs___2019-09-01_2019-09-30.csv";
-
-            const string fileName = "Queries_mohawkindustriesproductionwwrtu1cs_Daltile_All_Products_2019-10-01_2019-10-31.csv";
-
+            const string logFolderName = "Logs";
+            const string queryConsuptionFolderName = "QueryConsumption";
+            const string fileExtention = "csv";
+            
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-            string fullQueriesFilePath = Path.Combine(desktopPath, fileName);
+            string fullQueriesFolderPath = Path.Combine(desktopPath, logFolderName, queryConsuptionFolderName);
 
-            FileInfo queriesFile = new FileInfo(fullQueriesFilePath);
+            DirectoryInfo queriesDirectoryInfo = new DirectoryInfo(fullQueriesFolderPath);
 
-            return queriesFile;
+            var queriesFiles = queriesDirectoryInfo.GetFiles("*." + fileExtention); 
+            
+            return queriesFiles;
         }
     }
 }
