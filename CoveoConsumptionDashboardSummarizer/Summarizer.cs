@@ -41,6 +41,10 @@ namespace CoveoConsumptionDashboardSummarizer
 
             SummarizeDailyQueries();
 
+            SummarizeDailyPersistentQueries();
+
+            SummarizeDailyNormalQueries();
+
             //SummarizeImprovementSincePersistentQueriesWereIntroduced();
 
             //SummarizeImprovementSinceLargerPageSizesWereIntroduced();
@@ -75,6 +79,48 @@ namespace CoveoConsumptionDashboardSummarizer
             }
 
             Console.WriteLine($"{someSeperatorcharacters} End Daily Query Count {someSeperatorcharacters} ");
+            Console.WriteLine();
+        }
+
+        private void SummarizeDailyPersistentQueries()
+        {
+
+            string someSeperatorcharacters = new string('%', 13);
+
+            Console.WriteLine();
+            Console.WriteLine($"{someSeperatorcharacters} Daily Persistent Query Count {someSeperatorcharacters} ");
+
+            var queriesGroupedByDate = _logItems.Where(x => x.IsPersistentQuery).GroupBy(x => x.DateTime.Date).OrderBy(g => g.Key);
+
+            foreach (var curQueryGroup in queriesGroupedByDate)
+            {
+                Console.WriteLine($"{curQueryGroup.Key.ToShortDateString()}: {curQueryGroup.Count():N0}");
+            }
+
+            Console.WriteLine($"{someSeperatorcharacters} End Daily Persistent Query Count {someSeperatorcharacters} ");
+            Console.WriteLine();
+        }
+
+        private void SummarizeDailyNormalQueries()
+        {
+
+            string someSeperatorcharacters = new string('%', 13);
+
+            Console.WriteLine();
+            Console.WriteLine($"{someSeperatorcharacters} Normal Daily Query Count {someSeperatorcharacters} ");
+
+            var queriesGroupedByDate =
+                _logItems.Where(x => !x.IsPersistentQuery)
+                    .GroupBy(x => new {QueryDate = x.DateTime.Date, QuerySearchHub = x.SearchHub})
+                    .OrderBy(g => g.Key.QueryDate)
+                    .ThenBy(g => g.Key.QuerySearchHub);
+
+            foreach (var curQueryGroup in queriesGroupedByDate)
+            {
+                Console.WriteLine($"{curQueryGroup.Key.QueryDate.ToShortDateString()}/{ curQueryGroup.Key.QuerySearchHub }: {curQueryGroup.Count():N0}");
+            }
+
+            Console.WriteLine($"{someSeperatorcharacters} End Normal Daily Query Count {someSeperatorcharacters} ");
             Console.WriteLine();
         }
 
