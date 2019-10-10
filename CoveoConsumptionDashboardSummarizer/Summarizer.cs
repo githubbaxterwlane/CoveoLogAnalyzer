@@ -49,6 +49,8 @@ namespace CoveoConsumptionDashboardSummarizer
 
             //SummarizeImprovementSinceLargerPageSizesWereIntroduced();
 
+            SummarizeNormalQueryCountAveragesPerWeekendAndWeekday();
+
             Console.WriteLine(new string('-', 27));
             Console.WriteLine();
         }
@@ -164,6 +166,42 @@ namespace CoveoConsumptionDashboardSummarizer
             Console.WriteLine($"{someSeperatorcharacters} End Improvments Since Listing Search Page Had It's Page Size Increased {someSeperatorcharacters}");
             Console.WriteLine();
 
+        }
+
+        private void SummarizeNormalQueryCountAveragesPerWeekendAndWeekday()
+        {
+            Console.WriteLine();
+
+            var averageNormalQueriesOnWeekends =
+                _logItems
+                    .Where(i => i.DateTime.DayOfWeek == DayOfWeek.Saturday || i.DateTime.DayOfWeek == DayOfWeek.Sunday)
+                    .Where(i => !i.IsPersistentQuery)
+                    .GroupBy(i => i.DateTime.Day)
+                    .Average(g => g.Count());
+
+            var averageNormalQueriesOnWeekdays =
+                _logItems
+                    .Where(i => i.DateTime.DayOfWeek != DayOfWeek.Saturday && i.DateTime.DayOfWeek != DayOfWeek.Sunday)
+                    .Where(i => !i.IsPersistentQuery)
+                    .GroupBy(i => i.DateTime.Day)
+                    .Average(g => g.Count());
+
+            Console.WriteLine($"Average Weekend Query Count: {averageNormalQueriesOnWeekends:N0}");
+            Console.WriteLine($"Average Weekday Query Count: {averageNormalQueriesOnWeekdays:N0}");
+
+            const int weeksInAMonth = 4;
+            const int daysInAWorkWeek = 5;
+            const int daysInAWeekend = 2;
+
+            int guessAtMonthlyQueryUsage = System.Convert.ToInt32(
+                (averageNormalQueriesOnWeekends * daysInAWeekend * weeksInAMonth) +
+                (averageNormalQueriesOnWeekdays * daysInAWorkWeek * weeksInAMonth)
+            );
+
+            Console.WriteLine($"Guess of Monthly Query Usage: {guessAtMonthlyQueryUsage:N0}");
+
+
+            Console.WriteLine();
         }
 
         private int GetAverageQueryCountPerDayInRange(DateTime firstDayOfRange, DateTime lastDayOfRange)
