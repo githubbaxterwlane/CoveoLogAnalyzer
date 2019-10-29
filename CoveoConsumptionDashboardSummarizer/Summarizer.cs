@@ -51,6 +51,8 @@ namespace CoveoConsumptionDashboardSummarizer
 
             SummarizeNormalQueryCountAveragesPerWeekendAndWeekday();
 
+            ListQueriesWithCounts();
+
             Console.WriteLine(new string('-', 27));
             Console.WriteLine();
         }
@@ -199,6 +201,21 @@ namespace CoveoConsumptionDashboardSummarizer
             );
 
             Console.WriteLine($"Guess of Monthly Query Usage: {guessAtMonthlyQueryUsage:N0}");
+
+
+            Console.WriteLine();
+        }
+
+        private void ListQueriesWithCounts()
+        {
+            Console.WriteLine();
+
+            var queriesAndCount = _logItems.GroupBy(i => i.BasicExpression).OrderBy(g => g.Count());
+
+            foreach (var curBasicQuery in queriesAndCount)
+            {
+                Console.WriteLine($"{curBasicQuery.Key} : {curBasicQuery.Count():N0}");
+            }
 
 
             Console.WriteLine();
